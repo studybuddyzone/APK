@@ -71,21 +71,13 @@ jobs:
           WINDOWS_PFX_BASE64: ${{ secrets.WINDOWS_PFX_BASE64 }}
           WINDOWS_PFX_PASSWORD: ${{ secrets.WINDOWS_PFX_PASSWORD }}
         run: |
-          # NOTE: MSBuild's PackageCertificateKeyFile + PackageCertificatePassword
-          # combo does NOT support password-protected PFX files - this is a
-          # documented MSBuild/WindowsAppSDK limitation (see
-          # https://github.com/dotnet/msbuild/issues/9830), and is exactly what
-          # produces APPX0105 / APPX0107 even when the password is correct.
-          # Fix: import the certificate into the CurrentUser\My store and hand
-          # the build the certificate THUMBPRINT instead of a PFX file+password.
+          $pfxPath = Join-Path $env:RUNNER_TEMP "studybuddyzone-signing.pfx"
 
           if (-not [string]::IsNullOrWhiteSpace($env:WINDOWS_PFX_BASE64)) {
             # Use the org's real code-signing certificate if it was provided as a secret.
             Write-Host "Using WINDOWS_PFX_BASE64 secret for package signing."
-            $pfxPath = Join-Path $env:RUNNER_TEMP "studybuddyzonemanager-signing.pfx"
             [IO.File]::WriteAllBytes($pfxPath, [Convert]::FromBase64String($env:WINDOWS_PFX_BASE64))
-            $securePwd = ConvertTo-SecureString -String $env:WINDOWS_PFX_PASSWORD -Force -AsPlainText
-            $cert = Import-PfxCertificate -FilePath $pfxPath -CertStoreLocation "Cert:\CurrentUser\My" -Password $securePwd -Exportable
+            $pfxPassword = $env:WINDOWS_PFX_PASSWORD
           } else {
             # No org certificate supplied: generate a throwaway self-signed
             # certificate for this run only, so the MSIX can be built and
@@ -104,18 +96,56 @@ jobs:
               -KeyAlgorithm RSA `
               -KeyLength 2048 `
               -TextExtension @("2.5.29.37={text}1.3.6.1.5.5.7.3.3", "2.5.29.19={text}")
+
+            $pfxPassword = [System.Guid]::NewGuid().ToString("N")
+            $securePwd = ConvertTo-SecureString -String $pfxPassword -Force -AsPlainText
+            Export-PfxCertificate -Cert $cert -FilePath $pfxPath -Password $securePwd | Out-Null
           }
 
-          echo "thumbprint=$($cert.Thumbprint)" >> $env:GITHUB_OUTPUT
+          echo "pfx_path=$pfxPath" >> $env:GITHUB_OUTPUT
+          # Mask the password in logs and pass it to later steps.
+          echo "::add-mask::$pfxPassword"
+          echo "pfx_password=$pfxPassword" >> $env:GITHUB_OUTPUT
+
+      - name: Import signing certificate into cert store
+        id: import
+        shell: pwsh
+        env:
+          PFX_PATH: ${{ steps.cert.outputs.pfx_path }}
+          PFX_PASSWORD: ${{ steps.cert.outputs.pfx_password }}
+        run: |
+          # MSBuild's MSIX packaging targets (APPX0105/APPX0107) cannot import
+          # a password-protected .pfx file directly via PackageCertificateKeyFile
+          # + PackageCertificatePassword - this is a documented limitation, not
+          # a bug in our cert. Workaround: import the pfx into the current
+          # user's personal cert store ourselves, then reference it by
+          # Thumbprint instead.
+          $securePwd = ConvertTo-SecureString -String $env:PFX_PASSWORD -Force -AsPlainText
+          $imported = Import-PfxCertificate `
+            -FilePath $env:PFX_PATH `
+            -CertStoreLocation Cert:\CurrentUser\My `
+            -Password $securePwd `
+            -Exportable
+
+          $thumbprint = $imported.Thumbprint
+          Write-Host "Imported signing certificate, thumbprint: $thumbprint"
+          echo "thumbprint=$thumbprint" >> $env:GITHUB_OUTPUT
 
       - name: Restore NuGet packages
-        run: msbuild windows\StudyBuddyZoneManagerWindows.csproj /t:Restore /p:Configuration=Release /p:Platform=x64
+        run: msbuild windows\StudyBuddyZoneWindows.csproj /t:Restore /p:Configuration=Release /p:Platform=x64
 
       - name: Build signed MSIX / MSIXBundle
         shell: pwsh
         run: |
-          msbuild windows\StudyBuddyZoneManagerWindows.csproj `
-            "/t:Build;_GenerateAppxPackageOnBuild" `
+          # Note: only /t:Build is passed (not a chained "Build;_GenerateAppxPackageOnBuild"
+          # target list). When /restore is combined with an explicit target list in the same
+          # invocation, MSBuild resolves the target list BEFORE restore runs, so the private
+          # _GenerateAppxPackageOnBuild target (which only exists after the Windows App SDK
+          # NuGet package's targets are restored) isn't found yet -> MSB4057. Setting
+          # GenerateAppxPackageOnBuild=true is enough; it hooks itself in via AfterTargets="Build"
+          # once the package's .targets file is imported, so it still runs automatically.
+          msbuild windows\StudyBuddyZoneWindows.csproj `
+            /t:Build `
             /p:Configuration=Release `
             /p:Platform=x64 `
             /p:GenerateAppxPackageOnBuild=true `
@@ -123,7 +153,7 @@ jobs:
             /p:AppxBundlePlatforms="x64" `
             /p:UapAppxPackageBuildMode=StoreUpload `
             /p:AppxPackageSigningEnabled=true `
-            /p:PackageCertificateThumbprint="${{ steps.cert.outputs.thumbprint }}" `
+            /p:PackageCertificateThumbprint="${{ steps.import.outputs.thumbprint }}" `
             /p:AppxPackageDir="${{ github.workspace }}\windows\AppPackages\" `
             /restore
 
@@ -134,7 +164,7 @@ jobs:
       - name: Upload Windows MSIX/MSIXBundle
         uses: actions/upload-artifact@v4
         with:
-          name: studybuddyzonemanager-windows-msix
+          name: studybuddyzone-windows-msix
           path: |
             windows/AppPackages/**/*.msix
             windows/AppPackages/**/*.msixbundle
