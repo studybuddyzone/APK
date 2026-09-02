@@ -4,6 +4,7 @@ import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.view.WindowManager;
 import android.webkit.WebView;
 import java.net.URISyntaxException;
 import com.getcapacitor.BridgeActivity;
@@ -14,6 +15,18 @@ public class MainActivity extends BridgeActivity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        // Block screenshots and screen recording, and cause the app content
+        // to render as a black rectangle in any screen-share/cast/mirroring
+        // session (Meet, Zoom, Gemini Live screen share, built-in Android
+        // screen recorder, etc.). This is the standard Android mechanism —
+        // apps cannot distinguish "screenshot" from "screen recording" from
+        // "live screen share to an AI tool"; all of these go through the
+        // same capture surface, and FLAG_SECURE blocks all of them uniformly.
+        getWindow().setFlags(
+            WindowManager.LayoutParams.FLAG_SECURE,
+            WindowManager.LayoutParams.FLAG_SECURE
+        );
 
         WebView webView = this.bridge.getWebView();
 
