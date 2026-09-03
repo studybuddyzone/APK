@@ -1,0 +1,27 @@
+<!--
+  KAHAN LAGANA HAI:
+  `npx cap add android` (ya `npx cap sync android`) chalane ke baad,
+  android/app/src/main/AndroidManifest.xml kholo. Wahan <activity
+  android:name=".MainActivity" ...> tag milega — usme do cheezein karni hain:
+
+  1. Us <activity> tag mein ek attribute add karo:
+       android:launchMode="singleTask"
+     (Isके bina agar app already khuli ho aur student dobara link tap kare,
+     to ek nayi activity instance khul jaayegi instead of reusing wahi
+     window — singleTask isko rokta hai aur Capacitor ke "appUrlOpen"
+     event ko sahi se fire hone deta hai.)
+
+  2. Neeche wala <intent-filter> block us <activity> tag ke ANDAR,
+     doosre <intent-filter> (jo already LAUNCHER wala hoga) ke baad,
+     sibling ke roop mein paste karo.
+
+  Iske baad `.well-known/assetlinks.json` bhi apni website ke root pe
+  (https://studybuddypro-psi.vercel.app/.well-known/assetlinks.json)
+  honi chahiye — wo pehle se de di gayi hai.
+-->
+<intent-filter android:autoVerify="true">
+    <action android:name="android.intent.action.VIEW" />
+    <category android:name="android.intent.category.DEFAULT" />
+    <category android:name="android.intent.category.BROWSABLE" />
+    <data android:scheme="https" android:host="studybuddypro-psi.vercel.app" />
+</intent-filter>
