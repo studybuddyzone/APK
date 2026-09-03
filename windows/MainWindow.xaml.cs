@@ -12,6 +12,12 @@ public sealed partial class MainWindow : Window
     // exact same live app (see repo requirement: do not change this URL).
     private const string StartUrl = "https://studybuddypro-psi.vercel.app/";
 
+    // If the app was launched by tapping a studybuddypro-psi.vercel.app link
+    // (App URI Handler activation — see App.xaml.cs), this is that exact URL
+    // so we open straight to it (e.g. the quiz join / PRN page) instead of
+    // the default homepage.
+    private readonly string _initialUrl;
+
     // Excludes this window's content from anything that captures the screen:
     // screenshots (PrtScn, Snipping Tool), screen recorders, and live
     // screen-share / remote-desktop sessions (Teams, Zoom, a browser tab
@@ -27,10 +33,13 @@ public sealed partial class MainWindow : Window
 
     private const uint WDA_EXCLUDEFROMCAPTURE = 0x00000011;
 
-    public MainWindow()
+    public MainWindow() : this(null) { }
+
+    public MainWindow(string? launchUrl)
     {
         InitializeComponent();
         Title = "StudyBuddyZone";
+        _initialUrl = string.IsNullOrWhiteSpace(launchUrl) ? StartUrl : launchUrl!;
 
         IntPtr hwnd = WindowNative.GetWindowHandle(this);
         bool protectedFromCapture = SetWindowDisplayAffinity(hwnd, WDA_EXCLUDEFROMCAPTURE);
@@ -56,6 +65,22 @@ public sealed partial class MainWindow : Window
             AppWebView.Visibility = Visibility.Visible;
         };
 
-        AppWebView.Source = new Uri(StartUrl);
+        AppWebView.Source = new Uri(_initialUrl);
+    }
+
+    // Called by App.xaml.cs when a studybuddypro-psi.vercel.app link is
+    // tapped while this window is already open — navigate in place instead
+    // of doing nothing / opening a second window.
+    public void NavigateTo(string url)
+    {
+        try
+        {
+            if (AppWebView.CoreWebView2 != null) AppWebView.CoreWebView2.Navigate(url);
+            else AppWebView.Source = new Uri(url);
+        }
+        catch (UriFormatException)
+        {
+            // Malformed URL handed to us by the OS — ignore rather than crash.
+        }
     }
 }

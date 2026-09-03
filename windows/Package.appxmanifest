@@ -3,8 +3,9 @@
     xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
     xmlns:mp="http://schemas.microsoft.com/appx/2014/phone/manifest"
     xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
+    xmlns:uap3="http://schemas.microsoft.com/appx/manifest/uap/windows10/3"
     xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities"
-    IgnorableNamespaces="uap mp rescap">
+    IgnorableNamespaces="uap mp rescap uap3">
 
   <!--
     __PACKAGE_IDENTITY_NAME__, __PACKAGE_PUBLISHER__ and
@@ -49,6 +50,19 @@
         <uap:DefaultTile Wide310x150Logo="Assets\Wide310x150Logo.png" Square310x310Logo="Assets\LargeTile.png" />
         <uap:SplashScreen Image="Assets\SplashScreen.png" BackgroundColor="#ffffff" />
       </uap:VisualElements>
+      <Extensions>
+        <!-- Windows App URI Handler: lets Windows launch this app (instead of
+             the browser) when someone opens an https://studybuddypro-psi.vercel.app
+             link — e.g. a quiz-join.html room link shared on WhatsApp. Requires
+             a matching association file hosted at
+             https://studybuddypro-psi.vercel.app/.well-known/windows-app-web-link
+             (see windows/windows-app-web-link.template in this repo). -->
+        <uap3:Extension Category="windows.appUriHandler">
+          <uap3:AppUriHandler>
+            <uap3:Host Name="studybuddypro-psi.vercel.app" />
+          </uap3:AppUriHandler>
+        </uap3:Extension>
+      </Extensions>
     </Application>
   </Applications>
 

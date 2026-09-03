@@ -1,0 +1,31 @@
+{
+  "packageFamilyNames": [
+    "__PACKAGE_FAMILY_NAME__"
+  ]
+}
+
+/* ============================================================================
+   YEH FILE ABHI USE NAHI HO SAKTI — pehle __PACKAGE_FAMILY_NAME__ ko asli
+   Package Family Name se replace karna hoga, phir is JSON object (comment
+   lines hataa kar) ko exactly is URL pe host karna hoga:
+
+     https://studybuddypro-psi.vercel.app/.well-known/windows-app-web-link
+
+   (No file extension — file ka naam literally "windows-app-web-link" hai.)
+
+   PACKAGE FAMILY NAME KAISE NIKALE:
+   Package.appxmanifest mein Identity Name aur Publisher abhi CI ke
+   WINDOWS_PACKAGE_IDENTITY_NAME / WINDOWS_PACKAGE_PUBLISHER variables se
+   build ke time fill hote hain (Partner Center → App identity se copy
+   kiye hue) — is repo mein sirf placeholder hai, isliye Package Family
+   Name yahan se compute nahi ho sakta. Build hone ke baad nikaalne ke
+   2 tareeke:
+
+   1. App install karke PowerShell mein:
+        Get-AppxPackage -Name "*StudyBuddyZone*" | Select PackageFamilyName
+      Jo output aaye (jaise "Contoso.StudyBuddyZone_9z8a1v6z8g0v6") wahi
+      __PACKAGE_FAMILY_NAME__ ki jagah daalo.
+
+   2. Ya Partner Center → App identity page pe "Package family name" field
+      seedha wahin likha hota hai.
+   ============================================================================ */
