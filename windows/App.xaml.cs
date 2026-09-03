@@ -58,10 +58,18 @@ public partial class App : Application
 
     private static string? GetLaunchUrl(AppActivationArguments args)
     {
-        if (args.Kind == ExtendedActivationKind.AppUriHandler
-            && args.Data is Windows.ApplicationModel.Activation.IAppUriHandlerActivatedEventArgs uriArgs)
+        // The windows.appUriHandler manifest extension (Package.appxmanifest)
+        // makes Windows launch this app for studybuddypro-psi.vercel.app
+        // links, but the Windows App SDK surfaces that activation as a plain
+        // Protocol activation, not a distinct "AppUriHandler" kind. There is
+        // no ExtendedActivationKind.AppUriHandler and no
+        // IAppUriHandlerActivatedEventArgs type — using them fails to
+        // compile (CS0117 / CS0234). Protocol + IProtocolActivatedEventArgs
+        // is the correct pairing for this activation.
+        if (args.Kind == ExtendedActivationKind.Protocol
+            && args.Data is Windows.ApplicationModel.Activation.IProtocolActivatedEventArgs protocolArgs)
         {
-            return uriArgs.Uri.ToString();
+            return protocolArgs.Uri.ToString();
         }
         return null;
     }
