@@ -2,15 +2,25 @@
   "appId": "com.xevrontech.studybuddyzone",
   "appName": "StudyBuddyZone",
   "webDir": "www",
+  "android": {
+    "backgroundColor": "#ffffff"
+  },
   "server": {
     "url": "https://studybuddypro-psi.vercel.app",
     "allowNavigation": [
+      "studybuddypro-psi.vercel.app",
       "*.vercel.app",
+      "*.supabase.co",
+      "*.supabase.in",
       "*.firebaseio.com",
       "*.firebaseapp.com",
       "*.googleapis.com",
+      "accounts.google.com",
+      "*.google.com",
       "*.cashfree.com",
+      "*.cashfree.in",
       "*.payu.in",
+      "*.payu.com",
       "*.cloudinary.com"
     ]
   }
