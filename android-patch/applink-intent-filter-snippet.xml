@@ -1,21 +1,22 @@
 <!--
-  KAHAN LAGANA HAI:
-  `npx cap add android` (ya `npx cap sync android`) chalane ke baad,
-  android/app/src/main/AndroidManifest.xml kholo. Wahan <activity
-  android:name=".MainActivity" ...> tag milega — usme do cheezein karni hain:
+  AB YE AUTOMATIC HAI — kuch manually karne ki zaroorat nahi:
+  build-android.yml ka "Patch AndroidManifest.xml (App Links intent-filter
+  + singleTask for MainActivity)" step har build par khud is file ko padhta
+  hai (comment hata kar) aur android:launchMode="singleTask" + neeche wala
+  <intent-filter> MainActivity ke <activity> tag mein inject kar deta hai.
+  (Pehle ye sirf documentation thi, kabhi actually AndroidManifest.xml mein
+  jaati hi nahi thi — kyunki `npx cap add android` har build mein poora
+  android/ folder fresh bana deta hai, to koi manual edit agli build mein
+  gayab ho jaata. Indus Appstore ke "Ensure proper intent handling for
+  screen navigation" On-Hold reason ki yahi wajah thi — fix ho gaya.)
 
-  1. Us <activity> tag mein ek attribute add karo:
-       android:launchMode="singleTask"
-     (Isके bina agar app already khuli ho aur student dobara link tap kare,
-     to ek nayi activity instance khul jaayegi instead of reusing wahi
-     window — singleTask isko rokta hai aur Capacitor ke "appUrlOpen"
-     event ko sahi se fire hone deta hai.)
+  android:launchMode="singleTask" ka matlab: agar app already khuli ho aur
+  student dobara koi studybuddypro-psi.vercel.app link tap kare, to ek nayi
+  activity instance khulne ke bajaye wahi window reuse hoti hai — isके bina
+  tap karne par kuch hota hua nahi dikhta (jaise app "freeze"/"fail to
+  load" ho gayi ho).
 
-  2. Neeche wala <intent-filter> block us <activity> tag ke ANDAR,
-     doosre <intent-filter> (jo already LAUNCHER wala hoga) ke baad,
-     sibling ke roop mein paste karo.
-
-  Iske baad `.well-known/assetlinks.json` bhi apni website ke root pe
+  `.well-known/assetlinks.json` bhi apni website ke root pe
   (https://studybuddypro-psi.vercel.app/.well-known/assetlinks.json)
   honi chahiye — wo pehle se de di gayi hai.
 -->
