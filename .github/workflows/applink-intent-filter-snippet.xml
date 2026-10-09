@@ -1,0 +1,28 @@
+<!--
+  AB YE AUTOMATIC HAI — kuch manually karne ki zaroorat nahi:
+  build-android.yml ka "Patch AndroidManifest.xml (App Links intent-filter
+  + singleTask for MainActivity)" step har build par khud is file ko padhta
+  hai (comment hata kar) aur android:launchMode="singleTask" + neeche wala
+  <intent-filter> MainActivity ke <activity> tag mein inject kar deta hai.
+  (Pehle ye sirf documentation thi, kabhi actually AndroidManifest.xml mein
+  jaati hi nahi thi — kyunki `npx cap add android` har build mein poora
+  android/ folder fresh bana deta hai, to koi manual edit agli build mein
+  gayab ho jaata. Indus Appstore ke "Ensure proper intent handling for
+  screen navigation" On-Hold reason ki yahi wajah thi — fix ho gaya.)
+
+  android:launchMode="singleTask" ka matlab: agar app already khuli ho aur
+  student dobara koi studybuddypro-psi.vercel.app link tap kare, to ek nayi
+  activity instance khulne ke bajaye wahi window reuse hoti hai — isके bina
+  tap karne par kuch hota hua nahi dikhta (jaise app "freeze"/"fail to
+  load" ho gayi ho).
+
+  `.well-known/assetlinks.json` bhi apni website ke root pe
+  (https://studybuddypro-psi.vercel.app/.well-known/assetlinks.json)
+  honi chahiye — wo pehle se de di gayi hai.
+-->
+<intent-filter android:autoVerify="true">
+    <action android:name="android.intent.action.VIEW" />
+    <category android:name="android.intent.category.DEFAULT" />
+    <category android:name="android.intent.category.BROWSABLE" />
+    <data android:scheme="https" android:host="studybuddypro-psi.vercel.app" />
+</intent-filter>

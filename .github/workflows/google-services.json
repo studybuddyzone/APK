@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "473442117683",
+    "firebase_url": "https://students-e5183-default-rtdb.firebaseio.com",
+    "project_id": "students-e5183",
+    "storage_bucket": "students-e5183.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:473442117683:android:8a1fc423fc74b4135e9b46",
+        "android_client_info": {
+          "package_name": "com.xevrontech.studybuddyzone"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "473442117683-8059dd01ol9hvaihnlrb9n246tp6kf2v.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDVsExc9pWXZ8j8vmWERf89sQn1fgCHIbA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "473442117683-8059dd01ol9hvaihnlrb9n246tp6kf2v.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
