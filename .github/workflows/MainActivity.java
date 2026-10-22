@@ -68,6 +68,7 @@ public class MainActivity extends BridgeActivity {
     // ---- Native file chooser state (<input type="file"> support) ----
     private ActivityResultLauncher<Intent> fileChooserLauncher;
     private ActivityResultLauncher<String> cameraPermissionLauncher;
+    private ActivityResultLauncher<String> notificationPermissionLauncher;
     private ValueCallback<Uri[]> pendingFileCallback;
     private WebChromeClient.FileChooserParams pendingParams;
     private final List<File> pendingCameraFiles = new ArrayList<>();
@@ -119,6 +120,13 @@ public class MainActivity extends BridgeActivity {
             new ActivityResultContracts.RequestPermission(),
             granted -> launchFileChooser(granted)
         );
+        // Android 13+ (API 33+): POST_NOTIFICATIONS is a runtime permission. A remote site loaded in the WebView
+        // cannot trigger it through Notification.requestPermission(), so ask natively on launch like a normal app.
+        notificationPermissionLauncher = registerForActivityResult(
+            new ActivityResultContracts.RequestPermission(),
+            granted -> { /* page registers the FCM token itself once permission is granted (see native-push.js) */ }
+        );
+        requestNotificationPermissionIfNeeded();
         cleanOldUploadCache();
 
         if (webView != null) {
@@ -230,6 +238,22 @@ public class MainActivity extends BridgeActivity {
 
         // Start timeout watchdog (20 seconds fallback for slow connections)
         startTimeoutWatchdog();
+    }
+
+    // =====================================================================
+    //  Notification permission (Android 13+)
+    // =====================================================================
+
+    private void requestNotificationPermissionIfNeeded() {
+        if (Build.VERSION.SDK_INT < 33) return; // below Android 13 notifications are allowed by default
+        if (checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED) return;
+        // Small delay so the dialog shows over the loaded app instead of the splash/overlay.
+        mainHandler.postDelayed(() -> {
+            if (isFinishing() || isDestroyed()) return;
+            try {
+                notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS);
+            } catch (Exception ignored) { /* permission not declared in manifest build, or dialog already pending */ }
+        }, 1500);
     }
 
     // =====================================================================

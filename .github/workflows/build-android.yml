@@ -49,6 +49,19 @@ jobs:
               f.write(content)
           EOF
 
+      - name: Patch AndroidManifest.xml (declare POST_NOTIFICATIONS for Android 13+)
+        run: |
+          python3 - <<'EOF'
+          path = "android/app/src/main/AndroidManifest.xml"
+          with open(path) as f:
+              content = f.read()
+          perm = '<uses-permission android:name="android.permission.POST_NOTIFICATIONS" />'
+          if "android.permission.POST_NOTIFICATIONS" not in content:
+              content = content.replace("</manifest>", "    " + perm + "\n</manifest>", 1)
+              with open(path, "w") as f:
+                  f.write(content)
+          EOF
+
       - name: Copy google-services.json
         run: cp android-patch/google-services.json android/app/google-services.json
 
